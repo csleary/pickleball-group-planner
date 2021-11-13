@@ -4,11 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 const MAX_GROUP_SIZE = 12;
 const COURTS_PER_GROUP = 3;
 const MAX_NUM_GROUPS = 2;
+const defaultConfig = { maxGroupSize: MAX_GROUP_SIZE, courtsPerGroup: COURTS_PER_GROUP, maxNumGroups: MAX_NUM_GROUPS };
 
 const configs = [
-    ["Maximum number of players per group (12):", "maxGroupSize"],
-    ["Maximum number of courts per group (3):", "courtsPerGroup"],
-    ["Maximum number of groups (2):", "maxNumGroups"],
+    ["Maximum number of players per group (default: 12):", "maxGroupSize"],
+    ["Maximum number of courts per group (default: 3):", "courtsPerGroup"],
+    ["Maximum number of groups (default: 2):", "maxNumGroups"],
 ].map(([label, name]) => ({
     label,
     name,
@@ -30,8 +31,6 @@ const shuffleArray = array => {
     return shuffled;
 };
 
-const defaultConfig = { maxGroupSize: MAX_GROUP_SIZE, courtsPerGroup: COURTS_PER_GROUP, maxNumGroups: MAX_NUM_GROUPS };
-
 function App() {
     const [text, setText] = useState("");
     const [config, setConfig] = useState(defaultConfig);
@@ -48,13 +47,13 @@ function App() {
             .filter(Boolean)
             .map(player => player.trim());
 
-        const shuffled = shuffleArray(players);
+        const shuffled = [...new Set(shuffleArray(players))];
         const numPlayers = shuffled.length;
         const numGroups = Math.min(Math.floor(numPlayers / maxGroupSize), maxNumGroups);
         const groupSize = numPlayers / numGroups;
         const groupSizeRounded = Math.min(Math.ceil(groupSize / 4) * 4, maxGroupSize);
 
-        const groups = shuffled.flatMap((player, index, players) =>
+        const groups = shuffled.flatMap((_, index, players) =>
             index % groupSizeRounded ? [] : [players.slice(index, index + groupSizeRounded)]
         );
 
@@ -95,6 +94,7 @@ function App() {
                             className={classNames}
                             id={name}
                             name={name}
+                            min={1}
                             onChange={handleConfigChange}
                             type="number"
                             value={config[name]}
@@ -103,7 +103,7 @@ function App() {
                 ))}
             </div>
             <label className="block text-left mb-1" htmlFor="players">
-                Who's playing? (Put each player on a new line):
+                Who's playing? (Put each player on a new line, duplicate names will be removed):
             </label>
             <textarea
                 className="border-2 rounded-md flex-grow h-64 p-3 mb-2 w-full"
@@ -129,11 +129,16 @@ function App() {
                     return (
                         <div className="text-left mb-4" key={index}>
                             <h3 className="mb-3 text-xl">
-                                Group {index + 1} ({groupNumPlayers} players, courts {courtsFrom}-{courtsTo}):
+                                Group {index + 1} ({groupNumPlayers} players,{" "}
+                                {courtsTo > courtsFrom
+                                    ? `courts ${courtsFrom}-
+                                ${courtsTo}`
+                                    : `court ${courtsFrom}`}
+                                ):
                             </h3>
                             <ul>
                                 {group.sort().map((playerName, index) => (
-                                    <li key={playerName + "-" + index}>
+                                    <li key={playerName}>
                                         {`${index + 1}`.padStart(2, "0")}. {playerName}
                                     </li>
                                 ))}
