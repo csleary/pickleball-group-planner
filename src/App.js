@@ -119,7 +119,7 @@ function App() {
             >
                 Mix!
             </button>
-            <div className="grid grid-cols-4 gap-8 mb-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-8">
                 {playGroups.map((group, index) => {
                     const courtsFrom = index * courtsPerGroup + 1;
                     const courtsTo = (index + 1) * courtsPerGroup;
