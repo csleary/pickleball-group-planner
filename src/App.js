@@ -83,10 +83,11 @@ function App() {
 
     return (
         <div className="md:container md:mx-auto p-4">
-            <h2 className="text-4xl mb-8 text-center">Pickleball Group Randomiser</h2>
+            <h2 className="text-4xl mb-8 text-center">Pickleball Group Planner</h2>
+            <p className="mb-8">Create randomised groups of players, depending on group size and court counts.</p>
             <div className="grid grid-cols-3 gap-8 mb-8">
                 {configs.map(({ label, name, classNames }) => (
-                    <div>
+                    <div key={name}>
                         <label className="block text-left mb-1" htmlFor={name}>
                             {label}
                         </label>
@@ -112,12 +113,13 @@ function App() {
                 value={text}
             />
             <button
-                className="bg-green-200 border-2 border-green-300 rounded-md flex-0 py-2 px-4 mb-8"
+                className="bg-green-200 border-2 border-green-300 rounded-md flex-0 py-2 px-4 mb-8 disabled:opacity-50"
+                disabled={!text}
                 onClick={mixGroups}
             >
                 Mix!
             </button>
-            <div className="grid grid-cols-4 gap-8">
+            <div className="grid grid-cols-4 gap-8 mb-8">
                 {playGroups.map((group, index) => {
                     const courtsFrom = index * courtsPerGroup + 1;
                     const courtsTo = (index + 1) * courtsPerGroup;
@@ -130,8 +132,10 @@ function App() {
                                 Group {index + 1} ({groupNumPlayers} players, courts {courtsFrom}-{courtsTo}):
                             </h3>
                             <ul>
-                                {group.sort().map(playerName => (
-                                    <li key={playerName}>{playerName}</li>
+                                {group.sort().map((playerName, index) => (
+                                    <li key={playerName + "-" + index}>
+                                        {`${index + 1}`.padStart(2, "0")}. {playerName}
+                                    </li>
                                 ))}
                             </ul>
                             {groupSitOuts ? (
@@ -142,6 +146,9 @@ function App() {
                         </div>
                     );
                 })}
+            </div>
+            <div className="text-sm">
+                Created by Chris, <a href="http://pickleball-denhaag.nl/">Pickleball Den Haag</a>.
             </div>
         </div>
     );
