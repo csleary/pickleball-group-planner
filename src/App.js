@@ -1,13 +1,11 @@
 import "./App.css";
 import { useCallback, useEffect, useState } from "react";
 
-const MAX_GROUP_SIZE = 12;
 const COURTS_PER_GROUP = 3;
-const MAX_NUM_GROUPS = 2;
-const defaultConfig = { maxGroupSize: MAX_GROUP_SIZE, courtsPerGroup: COURTS_PER_GROUP, maxNumGroups: MAX_NUM_GROUPS };
+const MAX_NUM_GROUPS = 3;
+const defaultConfig = { courtsPerGroup: COURTS_PER_GROUP, maxNumGroups: MAX_NUM_GROUPS };
 
 const configs = [
-    ["Maximum number of players per group (default: 12):", "maxGroupSize"],
     ["Maximum number of courts per group (default: 3):", "courtsPerGroup"],
     ["Maximum number of groups (default: 2):", "maxNumGroups"],
 ].map(([label, name]) => ({
@@ -36,7 +34,10 @@ function App() {
     const [config, setConfig] = useState(defaultConfig);
     const [playGroups, setPlayGroups] = useState([]);
     const [sitouts, setSitouts] = useState([]);
-    const { maxGroupSize, courtsPerGroup, maxNumGroups } = config || {};
+    const [numPlayers, setNumPlayers] = useState();
+    const [splitEvenly, setSplitEvenly] = useState(true);
+    const { courtsPerGroup, maxNumGroups } = config || {};
+    const maxGroupSize = courtsPerGroup * 4;
 
     const handleChange = e => setText(e.target.value);
 
@@ -49,10 +50,15 @@ function App() {
 
         const shuffled = [...new Set(shuffleArray(players))];
         const numPlayers = shuffled.length;
-        const numGroups = Math.min(Math.floor(numPlayers / maxGroupSize), maxNumGroups);
-        const groupSize = numPlayers / numGroups;
-        const groupSizeRounded = Math.min(Math.ceil(groupSize / 4) * 4, maxGroupSize);
+        setNumPlayers(numPlayers);
 
+        // Calculate group size:
+        const numGroups = splitEvenly ? maxNumGroups : Math.min(Math.ceil(numPlayers / maxGroupSize), maxNumGroups);
+        const avgGroupSize = numPlayers / numGroups;
+        const optGroupSize = splitEvenly ? Math.floor(Math.max(avgGroupSize / 4, 1)) * 4 : maxGroupSize;
+        const groupSizeRounded = Math.min(optGroupSize, maxGroupSize);
+
+        // Split players into groups:
         const groups = shuffled.flatMap((_, index, players) =>
             index % groupSizeRounded ? [] : [players.slice(index, index + groupSizeRounded)]
         );
@@ -72,7 +78,7 @@ function App() {
         } else {
             setSitouts([]);
         }
-    }, [maxGroupSize, maxNumGroups, text]);
+    }, [maxGroupSize, maxNumGroups, splitEvenly, text]);
 
     useEffect(() => {
         mixGroups();
@@ -84,9 +90,9 @@ function App() {
         <div className="md:container md:mx-auto p-4">
             <h2 className="text-4xl mb-8 text-center">Pickleball Group Planner</h2>
             <p className="mb-8">Create randomised groups of players, depending on group size and court counts.</p>
-            <div className="grid grid-cols-3 gap-8 mb-8">
+            <div className="grid grid-cols-2 gap-8 mb-8">
                 {configs.map(({ label, name, classNames }) => (
-                    <div key={name}>
+                    <div className="flex flex-col" key={name}>
                         <label className="block text-left mb-1" htmlFor={name}>
                             {label}
                         </label>
@@ -99,6 +105,17 @@ function App() {
                             type="number"
                             value={config[name]}
                         />
+                        {name === "maxNumGroups" ? (
+                            <label class="inline-flex items-center mt-1">
+                                <input
+                                    type="checkbox"
+                                    class="form-checkbox"
+                                    checked={splitEvenly}
+                                    onChange={e => setSplitEvenly(e.target.checked)}
+                                />
+                                <span class="ml-2">Split players evenly between groups?</span>
+                            </label>
+                        ) : null}
                     </div>
                 ))}
             </div>
@@ -119,6 +136,7 @@ function App() {
             >
                 Mix!
             </button>
+            {numPlayers ? <h3 className="mb-3 text-xl">{numPlayers} players in total:</h3> : null}
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mb-8">
                 {playGroups.map((group, index) => {
                     const courtsFrom = index * courtsPerGroup + 1;
