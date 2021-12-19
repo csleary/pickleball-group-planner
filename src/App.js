@@ -81,8 +81,12 @@ function App() {
     }, [maxGroupSize, maxNumGroups, splitEvenly, text]);
 
     useEffect(() => {
+        if (Number.parseInt(courtsPerGroup) === 1) {
+            setSplitEvenly(false);
+        }
+
         mixGroups();
-    }, [mixGroups]);
+    }, [courtsPerGroup, mixGroups]);
 
     const handleConfigChange = e => setConfig(prev => ({ ...prev, [e.target.name]: e.target.value }));
 
@@ -106,14 +110,15 @@ function App() {
                             value={config[name]}
                         />
                         {name === "maxNumGroups" ? (
-                            <label class="inline-flex items-center mt-1">
+                            <label className="inline-flex items-center mt-1">
                                 <input
+                                    disabled={Number.parseInt(courtsPerGroup) === 1}
                                     type="checkbox"
-                                    class="form-checkbox"
+                                    className="form-checkbox"
                                     checked={splitEvenly}
                                     onChange={e => setSplitEvenly(e.target.checked)}
                                 />
-                                <span class="ml-2">Split players evenly between groups?</span>
+                                <span className="ml-2">Split players evenly between groups?</span>
                             </label>
                         ) : null}
                     </div>
